@@ -14,11 +14,31 @@ Run karne ke liye:
 """
 
 import asyncio
+import os
+from aiohttp import web
 from data_fetcher import scan_market
 from scorer import rank_top_coins
 from report_formatter import format_report
 from telegram_bot import send_telegram_message
 from config import TOP_N_REPORT, MIN_SCORE_TO_REPORT, SCAN_INTERVAL_MINUTES
+
+
+async def health(request):
+    return web.Response(text="Pump Scanner Bot is running ✅")
+
+
+async def start_dummy_server():
+    """Render free Web Service ko HTTP port chahiye - yeh chhota server bas
+    ek '/' endpoint deta hai taaki Render service ko healthy samjhe.
+    Asli kaam (scanning) main_loop() me ho rahega."""
+    app = web.Application()
+    app.router.add_get("/", health)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.environ.get("PORT", 10000))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    print(f"🌐 Dummy HTTP server chal raha hai port {port} par (Render health check ke liye)")
 
 
 async def run_scan_cycle():
@@ -46,4 +66,8 @@ async def main_loop():
 
 
 if __name__ == "__main__":
-    asyncio.run(main_loop())
+    async def runner():
+        await start_dummy_server()
+        await main_loop()
+
+    asyncio.run(runner())
