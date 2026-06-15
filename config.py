@@ -8,9 +8,22 @@ hai (Render -> Environment tab me daalna), code me mat likhna.
 
 import os
 
-# ---------- Exchange Settings (Binance public API - no key needed) ----------
-BINANCE_BASE_URL = "https://api.binance.com"
+# ---------- Exchange Settings ----------
+# Binance India se geo-blocked hai, isliye Bybit / OKX / Gate.io use kar rahe hai.
+# Teeno exchanges ka SPOT + FUTURES (perpetual) dono scan honge, merge + dedupe karke.
 QUOTE_ASSET = "USDT"          # sirf USDT pairs scan honge
+
+BYBIT_BASE_URL = "https://api.bybit.com"
+OKX_BASE_URL = "https://www.okx.com"
+GATE_SPOT_BASE_URL = "https://api.gateio.ws/api/v4"
+GATE_FUTURES_BASE_URL = "https://fx-api.gateio.ws/api/v4"
+
+# Exchange priority - same symbol multiple exchanges pe mile to is order me
+# pehla wala use hoga (dedupe)
+EXCHANGE_PRIORITY = ["bybit", "okx", "gate"]
+
+# Konsa market-type scan karna hai
+MARKET_TYPES = ["spot", "futures"]
 
 # ---------- Telegram Settings ----------
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
@@ -20,9 +33,10 @@ TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 COINGLASS_API_KEY = os.getenv("COINGLASS_API_KEY", "")  # blank rakho to skip ho jayega
 
 # ---------- Scan Universe ----------
-# Binance par ~400-500 USDT pairs hote hai. Hum sabse liquid (high volume)
-# top N ko scan karte hai - taaki dead/fake coins skip ho jaye.
-TOP_N_BY_VOLUME = 300
+# Bybit + OKX + Gate.io (spot + futures) milake hazaaro USDT pairs hote hai.
+# Hum sabse liquid (high 24h volume) top N ko scan karte hai - taaki dead/fake
+# coins skip ho jaye aur API calls bhi limit me rahe.
+TOP_N_BY_VOLUME = 150
 
 # ---------- Report Settings ----------
 TOP_N_REPORT = 10            # final report me kitne coins dikhane hai
@@ -33,6 +47,8 @@ SCAN_INTERVAL_MINUTES = 15    # bot kitni der me dobara scan karega
 # fast   -> pump phase pakadne ke liye (short term momentum)
 # medium -> trend confirmation
 # trend  -> bada picture (fake pump filter)
+# NOTE: yeh "standard" labels hai - har exchange ke fetcher me apne format
+# (Bybit: 15/60/240, OKX: 15m/1H/4H, Gate: 15m/1h/4h) me convert hote hai.
 TIMEFRAMES = {
     "fast": "15m",
     "medium": "1h",
